@@ -11,7 +11,8 @@ let noClickCount = 0;
 let buttonHeight = 48;
 let buttonWidth = 80;
 let fontSize = 20;
-const imagePaths = ['./images/image1.gif','./images/image2.gif','./images/image3.gif','./images/image4.gif','./images/image5.gif','./images/image6.gif','./images/image7.gif'];
+const imagePaths = ['./images/image1.gif','./images/image2.gif','./images/image3.gif','./images/image4.gif','./images/image5.gif'];
+const usedPositions = [];
 
 //sound
 function playSound(soundPath) {const audio = new Audio(soundPath); audio.play();}
@@ -40,26 +41,90 @@ const getRandomNumber = (num) => {return Math.floor(Math.random() * (num + 1));}
       duration: 500,
     });
   
+  // Create sticker effect for No button
+  const createSticker = (clickCount) => {
+    const imageRect = imageDisplay.getBoundingClientRect();
+    const sticker = document.createElement("img");
+    
+    // Place stickers around the main gif corners
+    const isMobile = window.innerWidth < 768;
+    const stickerSize = isMobile ? 160 : 180;
+    
+    // Position relative to main gif
+    const corners = [
+      {x: imageRect.left - stickerSize/2, y: imageRect.top - stickerSize/2}, // top-left of gif
+      {x: imageRect.right - stickerSize/2, y: imageRect.top - stickerSize/2}, // top-right of gif
+      {x: imageRect.left - stickerSize/2, y: imageRect.bottom - stickerSize/2}, // bottom-left of gif
+      {x: imageRect.right - stickerSize/2, y: imageRect.bottom - stickerSize/2} // bottom-right of gif
+    ];
+    
+    const cornerIndex = (clickCount - 1) % corners.length;
+    const selectedCorner = corners[cornerIndex];
+    
+    const randomX = selectedCorner.x + (Math.random() - 0.5) * 30;
+    const randomY = selectedCorner.y + (Math.random() - 0.5) * 30;
+    
+    const randomAngle = (Math.random() - 0.5) * 30; // -15 to +15 degrees
+    
+    sticker.src = `./images/m${clickCount}.jpg`;
+    sticker.style.position = "absolute";
+    sticker.style.left = `${randomX}px`;
+    sticker.style.top = `${randomY}px`;
+    sticker.style.transform = `rotate(${randomAngle}deg)`;
+    const stickerSizeStr = isMobile ? "160px" : "180px";
+    sticker.style.width = stickerSizeStr;
+    sticker.style.height = stickerSizeStr;
+    sticker.style.borderRadius = "50%";
+    sticker.style.boxShadow = "0 4px 8px rgba(0,0,0,0.3)";
+    sticker.style.border = "3px solid white";
+    sticker.style.zIndex = "1";
+    sticker.style.pointerEvents = "none";
+    sticker.style.objectFit = "cover";
+    
+    document.body.appendChild(sticker);
+    
+    // Cute bounce animation
+    anime({
+      targets: sticker,
+      scale: [0, 1.2, 1],
+      duration: 600,
+      easing: "easeOutElastic(1, .8)"
+    });
+  };
+
   //no button
   noButton.addEventListener("click", () => {
     playSound('./sounds/click.mp3');
-    if (noClickCount < 4) {
+    if (noClickCount < 7) {
       noClickCount++;
       imageDisplay.src = imagePaths[noClickCount] || "./images/image1.gif";
   
       //yes button gets thicc
-      buttonHeight += 35; buttonWidth += 35; fontSize += 25;
+      buttonHeight += 25; buttonWidth += 25; fontSize += 3;
       yesButton.style.height = `${buttonHeight}px`;
-      yesButton.style.width = `${buttonWidth}px`;
+      yesButton.style.width = `${buttonHeight}px`;
       yesButton.style.fontSize = `${fontSize}px`;
+      yesButton.style.borderRadius = "50%";
+      yesButton.style.padding = "0";
+      
+      // Keep text and buttons on top
+      valentineQuestion.style.zIndex = "999";
+      valentineQuestion.style.position = "relative";
+      valentineQuestion.style.webkitTextStroke = "1px white";
+      valentineQuestion.style.textShadow = "1px 1px 0 white, -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white";
+      responseButtons.style.zIndex = "999";
+      responseButtons.style.position = "relative";
   
-      //no button text
-      const messages = ["No","Are you sure?","Babyy please?","Don't do this to me :(","Say yes or else...",];
+      //no button text and stickers
+      const messages = ["Не","Точно?","Ну пожалуйста?","Не делай так :(","Ну давай же!","Последний шанс!","Скажи да или..."];
+      
+      // Create cute sticker on the image
+      createSticker(noClickCount);
   
-      if (noClickCount === 4) {
+      if (noClickCount === 7) {
         const newButton = document.createElement("button");
         newButton.id = "runawayButton";
-        newButton.textContent = "Say yes or else...";
+        newButton.textContent = "Скажи да или...";
         newButton.style.position = "absolute";
         const yesButtonRect = yesButton.getBoundingClientRect();
         newButton.style.top = `${yesButtonRect.bottom + 10}px`;
@@ -84,26 +149,28 @@ const getRandomNumber = (num) => {return Math.floor(Math.random() * (num + 1));}
   
   //yes button
   yesButton.addEventListener("click", () => {
-    playSound('./sounds/click.mp3');
+    playSound('./sounds/final.mp3');
     imageDisplay.remove(); 
     responseButtons.style.display = "none"; 
   
     //yes page
     valentineQuestion.innerHTML = `
-      <img src="./images/image7.gif" alt="Celebration duckie" style="display: block; margin: 0 auto; width: 200px; height: auto;"/>
-      Congratulations!!<br>
-      <span style="font-size: 20px; color: #bd1e59;">You have scored a baddie for Valentine's Day! <3</span>
+      <img src="./images/final.gif" alt="Celebration duckie" style="display: block; margin: 0 auto; width: 200px; height: auto;"/>
+      Ура мы идем гулять<br>
+      <span style="font-size: 20px; color: #bd1e59;">Че там куда пойдем)<3</span>
     `;
-    valentineQuestion.style.textAlign = "center"; 
+    valentineQuestion.style.textAlign = "center";
+    valentineQuestion.style.marginTop = "80px"; 
   
     //make image go boing
     const bounceImage = document.createElement("img");
-    bounceImage.src = "./images/baddie.jpg";
+    bounceImage.src = "./images/m0.jpg";
     bounceImage.alt = "Baddie";
     bounceImage.style.position = "absolute";
-    bounceImage.style.width = "300px";
-    bounceImage.style.height = "325px";
+    bounceImage.style.width = "200px";
+    bounceImage.style.height = "200px";
     bounceImage.style.borderRadius = "50%";
+    bounceImage.style.objectFit = "cover";
     document.body.appendChild(bounceImage);
   
     startBouncing(bounceImage);
